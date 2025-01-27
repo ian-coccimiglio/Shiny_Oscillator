@@ -18,6 +18,11 @@
 # Output files from R CMD check
 /*.Rcheck/
 
+# Compiled C code
+*.c
+*.o
+*.so
+
 # RStudio files
 .Rproj.user/
 

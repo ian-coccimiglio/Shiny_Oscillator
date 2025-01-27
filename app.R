@@ -3,18 +3,36 @@ library(cOde)
 library(deSolve)
 library(bslib)
 
+## helper function, adapted from package cOde v.2.2 (GPL >= 2.0), then from Thomas Petzoldt
+loadDLL <- function(func, cfunction="derivs") {
+  .so <- .Platform$dynlib.ext
+  checkDLL <- try(getNativeSymbolInfo(cfunction), silent=TRUE)
+  if(inherits(checkDLL, "try-error")) {
+    dyn.load(paste0(func, .so))
+    #cat("Shared object is loaded and ready to use\n")
+  } else if ((is.null(checkDLL$package))) {
+    # We are on Windows (always overload)
+    dyn.load(paste0(func, .so))
+  } else if((checkDLL$package)[[1]] != func) {
+    # We are on Unix
+    dyn.load(paste0(func, .so))
+  }
+}
+
 # Feature 1, Creating a damped biological oscillator. This compiles an object which
 # simulates a biological system that tends towards damped oscillation.
 # Users can change the INDIVIDUAL parameters and the simulation time.
 # Outcomes are changes in the phase-space diagram and the time-concentration plot.
 
 compileAlon <- !file.exists(paste0("Alon_damped", .Platform$dynlib.ext))
+
 osc2 <- cOde::funC(
     c(
         X = "-b1*Y - a1*X",
         Y = "b2*X - a2*Y"
     ), modelname = "Alon_damped", compile=compileAlon
 )
+if (!compileAlon) loadDLL("Alon_damped")
 
 forcings <- c("noise")
 compileNoise = !file.exists(paste0("damped_noise", .Platform$dynlib.ext))
@@ -30,6 +48,7 @@ noise <- cOde::funC(
     fcontrol = "nospline",
     nGridpoints = 10
 )
+if (!compileNoise) loadDLL("damped_noise")
 
 ## Feature 2, Creating a 3-part repressilator. This compiles an object which
 # simulates a 3 component system that tends towards infinite oscillations.
@@ -46,6 +65,7 @@ osc3 <- cOde::funC(
     ),
     modelname = "Osc_3", compile=compileOsc3
 )
+if (!compileOsc3) loadDLL("Osc_3")
 
 ## Feature 3, Creating the brusselator This compiles an object which
 # simulates a 2 component system that tends towards infinite oscillations.
@@ -59,6 +79,7 @@ brussC <- cOde::funC(
         Y = "k2*B*X - k3*(X^2)*Y"
     ), modelname = "brusselC", compile=compileBrussel
 )
+if (!compileBrussel) loadDLL("brusselC")
 
 # Extra, this is a repression function that allows modification of N
 repress_R <- function(Time, State, Pars) {

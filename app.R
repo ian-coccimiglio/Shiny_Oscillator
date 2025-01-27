@@ -8,15 +8,17 @@ library(bslib)
 # Users can change the INDIVIDUAL parameters and the simulation time.
 # Outcomes are changes in the phase-space diagram and the time-concentration plot.
 
-#compile <- !file.exists(paste0("BrusselC", .Platform$dynlib.ext))
+compileAlon <- !file.exists(paste0("Alon_damped", .Platform$dynlib.ext))
 osc2 <- cOde::funC(
     c(
         X = "-b1*Y - a1*X",
         Y = "b2*X - a2*Y"
-    ), modelname = "Alon_damped", compile=TRUE
+    ), modelname = "Alon_damped", compile=compileAlon
 )
 
 forcings <- c("noise")
+compileNoise = !file.exists(paste0("damped_noise", .Platform$dynlib.ext))
+
 noise <- cOde::funC(
     c(
         X = "-b1*Y - a1*X",
@@ -24,7 +26,7 @@ noise <- cOde::funC(
     ),
     forcings = forcings,
     modelname = "damped_noise",
-    compile=TRUE,
+    compile=compileNoise,
     fcontrol = "nospline",
     nGridpoints = 10
 )
@@ -34,6 +36,7 @@ noise <- cOde::funC(
 # Users are able to change the global degradation, creation, and concentration constants.
 # Additionally, they can change the simulation length.
 # As above, this produces a phase-space diagram and the time-concentration plot.
+compileOsc3 <- !file.exists(paste0("Osc_3", .Platform$dynlib.ext))
 osc3 <- cOde::funC(
     c(
         # 1 and 3 are rate constants for the purposes of this demo.
@@ -41,7 +44,7 @@ osc3 <- cOde::funC(
         Y = "beta/(1+((X/k)^3)) - g2*Y",
         Z = "beta/(1+((Y/k)^3)) - g2*Z"
     ),
-    modelname = "Osc_3", compile=TRUE
+    modelname = "Osc_3", compile=compileOsc3
 )
 
 ## Feature 3, Creating the brusselator This compiles an object which
@@ -49,11 +52,12 @@ osc3 <- cOde::funC(
 # Users are able to manipulate the different inflows and outflow rates,
 # as well as concentrations of products A, and B
 # As above, this produces a phase-space diagram and the time-concentration plot.
+compileBrussel = !file.exists(paste0("brusselC", .Platform$dynlib.ext))
 brussC <- cOde::funC(
     c(
         X = "k1*A - k2*B*X + k3*(X^2)*Y - k4*X",
         Y = "k2*B*X - k3*(X^2)*Y"
-    ), modelname = "brusselC", compile=TRUE
+    ), modelname = "brusselC", compile=compileBrussel
 )
 
 # Extra, this is a repression function that allows modification of N
